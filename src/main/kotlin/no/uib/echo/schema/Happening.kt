@@ -2,16 +2,9 @@ package no.uib.echo.schema
 
 import com.google.gson.annotations.SerializedName
 import io.ktor.http.HttpStatusCode
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.addLogger
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.jodatime.datetime
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
 import org.joda.time.DateTime
 
 enum class HAPPENINGTYPE {

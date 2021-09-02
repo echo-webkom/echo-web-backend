@@ -1,5 +1,6 @@
 package no.uib.echo.schema
 
+import io.ktor.http.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.jodatime.*
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -25,6 +26,13 @@ data class RegistrationJson(
     val submitDate: String?,
     val waitList: Boolean,
     val answers: List<AnswerJson>,
+    val type: HAPPENINGTYPE
+)
+
+data class EarlyRegistrationJson(
+    val email: String,
+    val slug: String,
+    val submitDate: String?,
     val type: HAPPENINGTYPE
 )
 
@@ -72,27 +80,31 @@ fun selectRegistrations(
         addLogger(StdOutSqlLogger)
 
         val query = when {
-            emailParam != null && slugParam != null ->
+
+            emailParam != null && slugParam != null -> {
                 when (type) {
                     HAPPENINGTYPE.BEDPRES ->
                         BedpresRegistration.select { BedpresRegistration.email eq emailParam and (BedpresRegistration.bedpresSlug eq slugParam) }
                     HAPPENINGTYPE.EVENT ->
                         EventRegistration.select { EventRegistration.email eq emailParam and (EventRegistration.eventSlug eq slugParam) }
                 }
-            slugParam != null ->
+            }
+            slugParam != null -> {
                 when (type) {
                     HAPPENINGTYPE.BEDPRES ->
                         BedpresRegistration.select { BedpresRegistration.bedpresSlug eq slugParam }
                     HAPPENINGTYPE.EVENT ->
                         EventRegistration.select { EventRegistration.eventSlug eq slugParam }
                 }
-            emailParam != null ->
+            }
+            emailParam != null -> {
                 when (type) {
                     HAPPENINGTYPE.BEDPRES ->
                         BedpresRegistration.select { BedpresRegistration.email eq emailParam }
                     HAPPENINGTYPE.EVENT ->
                         EventRegistration.select { EventRegistration.email eq emailParam }
                 }
+            }
             else -> null
         }
 
@@ -270,11 +282,66 @@ fun countRegistrations(slug: String, type: HAPPENINGTYPE): RegistrationCountJson
     return RegistrationCountJson(regCount, waitListCount)
 }
 
+fun insertEarlyRegistration(reg: RegistrationJson): Pair<HttpStatusCode, String> {
+    return transaction {
+        addLogger(StdOutSqlLogger)
+
+        val happening = selectHappeningBySlug(reg.slug, reg.type) ?:
+            return@transaction Pair(HttpStatusCode.NotFound, "Happening (${reg.type}) with slug = '${reg.slug}' doesn't exist.")
+
+        if (DateTime(happening.registrationDate).isBeforeNow)
+            return@transaction Pair(HttpStatusCode.Forbidden, "Cannot submit early registration after registration has opened.")
+
+        val oldReg = when (reg.type) {
+            HAPPENINGTYPE.BEDPRES ->
+                BedpresRegistration.select { BedpresRegistration.email eq reg.email and (BedpresRegistration.bedpresSlug eq happening.slug) }
+                    .firstOrNull()
+            HAPPENINGTYPE.EVENT ->
+                EventRegistration.select { EventRegistration.email eq reg.email and (EventRegistration.eventSlug eq happening.slug) }
+                    .firstOrNull()
+        }
+
+        if (oldReg == null) {
+            when (reg.type) {
+                HAPPENINGTYPE.BEDPRES ->
+                    BedpresRegistration.insert {
+                        it[email] = reg.email
+                        it[firstName] = reg.firstName
+                        it[lastName] = reg.lastName
+                        it[degree] = reg.degree.toString()
+                        it[degreeYear] = reg.degreeYear
+                        it[bedpresSlug] = reg.slug
+                        it[terms] = reg.terms
+                        it[waitList] = false
+                    }
+                HAPPENINGTYPE.EVENT ->
+                    EventRegistration.insert {
+                        it[email] = reg.email
+                        it[firstName] = reg.firstName
+                        it[lastName] = reg.lastName
+                        it[degree] = reg.degree.toString()
+                        it[degreeYear] = reg.degreeYear
+                        it[eventSlug] = reg.slug
+                        it[terms] = reg.terms
+                        it[waitList] = false
+                    }
+            }
+
+            return@transaction Pair(
+                HttpStatusCode.OK,
+                "Early registration submitted with email = ${reg.email} and slug = ${reg.slug}."
+            )
+        }
+
+        return@transaction Pair(HttpStatusCode.Conflict, "Cannot update early registration.")
+    }
+}
+
 fun deleteRegistration(shortReg: ShortRegistrationJson) {
     transaction {
         addLogger(StdOutSqlLogger)
 
-        when (shortReg.type) {
+        when(shortReg.type) {
             HAPPENINGTYPE.BEDPRES ->
                 BedpresRegistration.deleteWhere { BedpresRegistration.bedpresSlug eq shortReg.slug and (BedpresRegistration.email eq shortReg.email) }
             HAPPENINGTYPE.EVENT ->

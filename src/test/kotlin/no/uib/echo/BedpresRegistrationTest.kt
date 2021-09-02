@@ -40,8 +40,10 @@ class BedpresRegistrationTest : StringSpec({
     val gson = Gson()
 
     val bedkom = "bedkom"
+    val webkom = "webkom"
     val keys = mapOf(
-        bedkom to "bedkom-passord"
+        bedkom to "bedkom-passord",
+        webkom to "webkom-passord"
     )
 
     beforeSpec { Db.init() }
@@ -614,6 +616,47 @@ class BedpresRegistrationTest : StringSpec({
 
             getCountRegCall.response.status() shouldBe HttpStatusCode.BadRequest
             getCountRegCall.response.content shouldBe "Count parameter defined but no slug was given."
+        }
+    }
+
+    "Should be able to submit an early registration with correct Authorization header" {
+        withTestApplication({
+            configureRouting(keys)
+        }) {
+            val getCountRegCall: TestApplicationCall =
+                handleRequest(
+                    method = HttpMethod.Post,
+                    uri = "/${Routing.registrationRoute}/${Routing.earlyRegistrationRoute}"
+                ) {
+                    addHeader(
+                        HttpHeaders.Authorization,
+                        "Basic ${Base64.getEncoder().encodeToString("$webkom:${keys[webkom]}".toByteArray())}"
+                    )
+                    setBody(gson.toJson(exampleReg))
+                }
+
+            getCountRegCall.response.status() shouldBe HttpStatusCode.OK
+            getCountRegCall.response.content shouldBe "Early registration submitted with email = ${exampleReg.email} and slug = ${exampleReg.slug}."
+        }
+    }
+
+    "Should not be able to submit an early registration with incorrect Authorization header" {
+        withTestApplication({
+            configureRouting(keys)
+        }) {
+            val getCountRegCall: TestApplicationCall =
+                handleRequest(
+                    method = HttpMethod.Post,
+                    uri = "/${Routing.registrationRoute}/${Routing.earlyRegistrationRoute}"
+                ) {
+                    addHeader(
+                        HttpHeaders.Authorization,
+                        "Basic ${Base64.getEncoder().encodeToString("$webkom:${keys[webkom]}breh123".toByteArray())}"
+                    )
+                    setBody(gson.toJson(exampleReg))
+                }
+
+            getCountRegCall.response.status() shouldBe HttpStatusCode.Unauthorized
         }
     }
 })

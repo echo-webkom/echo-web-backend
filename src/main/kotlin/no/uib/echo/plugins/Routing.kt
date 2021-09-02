@@ -19,21 +19,10 @@ import no.uib.echo.plugins.Routing.deleteRegistration
 import no.uib.echo.resToJson
 import no.uib.echo.plugins.Routing.getRegistration
 import no.uib.echo.plugins.Routing.getStatus
+import no.uib.echo.plugins.Routing.postEarlyRegistration
 import no.uib.echo.plugins.Routing.postRegistration
 import no.uib.echo.plugins.Routing.putHappening
-import no.uib.echo.schema.Degree
-import no.uib.echo.schema.HAPPENINGTYPE
-import no.uib.echo.schema.HappeningJson
-import no.uib.echo.schema.HappeningSlugJson
-import no.uib.echo.schema.RegistrationJson
-import no.uib.echo.schema.RegistrationStatus
-import no.uib.echo.schema.ShortRegistrationJson
-import no.uib.echo.schema.countRegistrations
-import no.uib.echo.schema.deleteHappeningBySlug
-import no.uib.echo.schema.deleteRegistration
-import no.uib.echo.schema.insertOrUpdateHappening
-import no.uib.echo.schema.insertRegistration
-import no.uib.echo.schema.selectRegistrations
+import no.uib.echo.schema.*
 
 fun Application.configureRouting(keys: Map<String, String>) {
     val bedkom = "bedkom"
@@ -81,6 +70,7 @@ fun Application.configureRouting(keys: Map<String, String>) {
 
             authenticate("auth-${webkom}") {
                 putHappening()
+                postEarlyRegistration()
                 deleteHappening()
             }
         }
@@ -89,6 +79,7 @@ fun Application.configureRouting(keys: Map<String, String>) {
 
 object Routing {
     const val registrationRoute: String = "registration"
+    const val earlyRegistrationRoute: String = "bedkom"
     const val happeningRoute: String = "happening"
 
     fun Route.getStatus() {
@@ -215,6 +206,39 @@ object Routing {
                             resToJson(Response.NotInRange, registration.type, degreeYearRange = degreeYearRange)
                         )
                 }
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError)
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun Route.postEarlyRegistration() {
+        post("/$registrationRoute/$earlyRegistrationRoute") {
+            try {
+                val earlyReg = call.receive<EarlyRegistrationJson>()
+
+                val registration = RegistrationJson(
+                    earlyReg.email,
+                    "Reservert",
+                    "Plass",
+                    Degree.MISC,
+                    1,
+                    earlyReg.slug,
+                    true,
+                    earlyReg.submitDate,
+                    false,
+                    emptyList(),
+                    earlyReg.type
+                )
+
+                if (!registration.email.contains('@')) {
+                    call.respond(HttpStatusCode.BadRequest, resToJson(Response.InvalidEmail, registration.type))
+                    return@post
+                }
+
+                call.respond(insertEarlyRegistration(registration))
+
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.InternalServerError)
                 e.printStackTrace()
