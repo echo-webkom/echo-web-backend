@@ -80,31 +80,27 @@ fun selectRegistrations(
         addLogger(StdOutSqlLogger)
 
         val query = when {
-
-            emailParam != null && slugParam != null -> {
+            emailParam != null && slugParam != null ->
                 when (type) {
                     HAPPENINGTYPE.BEDPRES ->
                         BedpresRegistration.select { BedpresRegistration.email eq emailParam and (BedpresRegistration.bedpresSlug eq slugParam) }
                     HAPPENINGTYPE.EVENT ->
                         EventRegistration.select { EventRegistration.email eq emailParam and (EventRegistration.eventSlug eq slugParam) }
                 }
-            }
-            slugParam != null -> {
+            slugParam != null ->
                 when (type) {
                     HAPPENINGTYPE.BEDPRES ->
                         BedpresRegistration.select { BedpresRegistration.bedpresSlug eq slugParam }
                     HAPPENINGTYPE.EVENT ->
                         EventRegistration.select { EventRegistration.eventSlug eq slugParam }
                 }
-            }
-            emailParam != null -> {
+            emailParam != null ->
                 when (type) {
                     HAPPENINGTYPE.BEDPRES ->
                         BedpresRegistration.select { BedpresRegistration.email eq emailParam }
                     HAPPENINGTYPE.EVENT ->
                         EventRegistration.select { EventRegistration.email eq emailParam }
                 }
-            }
             else -> null
         }
 
@@ -341,7 +337,7 @@ fun deleteRegistration(shortReg: ShortRegistrationJson) {
     transaction {
         addLogger(StdOutSqlLogger)
 
-        when(shortReg.type) {
+        when (shortReg.type) {
             HAPPENINGTYPE.BEDPRES ->
                 BedpresRegistration.deleteWhere { BedpresRegistration.bedpresSlug eq shortReg.slug and (BedpresRegistration.email eq shortReg.email) }
             HAPPENINGTYPE.EVENT ->
