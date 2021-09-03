@@ -17,11 +17,15 @@ FROM openjdk:13-jdk-slim AS build
 WORKDIR /opt/build
 
 COPY --from=deps /root/.gradle /root/.gradle/
-COPY . .
+COPY *.kts gradle.properties gradlew* ./
+COPY gradle gradle
+COPY src/main src/main
 
 # Build with Shadow.
 # Add or remove '--info' as needed.
 RUN ./gradlew shadowJar --build-cache --no-rebuild --no-daemon
+
+COPY src/test src/test
 
 
 # Run the server

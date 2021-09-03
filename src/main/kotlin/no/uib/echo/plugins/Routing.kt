@@ -218,6 +218,15 @@ object Routing {
             try {
                 val earlyReg = call.receive<EarlyRegistrationJson>()
 
+                if (earlyReg.type != HAPPENINGTYPE.BEDPRES) {
+                    call.respond(
+                        HttpStatusCode.NotImplemented,
+                        "Can only submit early registration for type = BEDPRES."
+                    )
+                    return@post
+                }
+
+
                 val registration = RegistrationJson(
                     earlyReg.email,
                     "Reservert",
@@ -226,21 +235,16 @@ object Routing {
                     1,
                     earlyReg.slug,
                     true,
-                    earlyReg.submitDate,
+                    null,
                     false,
                     emptyList(),
                     earlyReg.type
                 )
 
-                if (!registration.email.contains('@')) {
-                    call.respond(HttpStatusCode.BadRequest, resToJson(Response.InvalidEmail, registration.type))
-                    return@post
-                }
-
-                call.respond(insertEarlyRegistration(registration))
-
+                val result = insertEarlyRegistration(registration)
+                call.respond(result.first, result.second)
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError)
+                call.respond(HttpStatusCode.InternalServerError, e.toString())
                 e.printStackTrace()
             }
         }

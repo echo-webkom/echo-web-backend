@@ -36,6 +36,12 @@ class BedpresRegistrationTest : StringSpec({
             AnswerJson("Har du noen allergier?", "Ja masse allergier ass 100")
         ), HAPPENINGTYPE.BEDPRES
     )
+    val exampleEarlyReg = EarlyRegistrationJson(
+        exampleReg.email,
+        exampleBedpres3.slug,
+        null,
+        HAPPENINGTYPE.BEDPRES
+    )
 
     val gson = Gson()
 
@@ -623,7 +629,7 @@ class BedpresRegistrationTest : StringSpec({
         withTestApplication({
             configureRouting(keys)
         }) {
-            val getCountRegCall: TestApplicationCall =
+            val getEarlyRegCall: TestApplicationCall =
                 handleRequest(
                     method = HttpMethod.Post,
                     uri = "/${Routing.registrationRoute}/${Routing.earlyRegistrationRoute}"
@@ -631,12 +637,37 @@ class BedpresRegistrationTest : StringSpec({
                     addHeader(
                         HttpHeaders.Authorization,
                         "Basic ${Base64.getEncoder().encodeToString("$webkom:${keys[webkom]}".toByteArray())}"
+
                     )
-                    setBody(gson.toJson(exampleReg))
+                    addHeader(HttpHeaders.ContentType, "application/json")
+                    setBody(gson.toJson(exampleEarlyReg))
                 }
 
-            getCountRegCall.response.status() shouldBe HttpStatusCode.OK
-            getCountRegCall.response.content shouldBe "Early registration submitted with email = ${exampleReg.email} and slug = ${exampleReg.slug}."
+            getEarlyRegCall.response.status() shouldBe HttpStatusCode.OK
+            getEarlyRegCall.response.content shouldBe "Early registration submitted with email = ${exampleReg.email} and slug = ${exampleBedpres3.slug}."
+        }
+    }
+
+    "Should not be able to submit an early registration if registration has opened." {
+        withTestApplication({
+            configureRouting(keys)
+        }) {
+            val getEarlyRegCall: TestApplicationCall =
+                handleRequest(
+                    method = HttpMethod.Post,
+                    uri = "/${Routing.registrationRoute}/${Routing.earlyRegistrationRoute}"
+                ) {
+                    addHeader(
+                        HttpHeaders.Authorization,
+                        "Basic ${Base64.getEncoder().encodeToString("$webkom:${keys[webkom]}".toByteArray())}"
+
+                    )
+                    addHeader(HttpHeaders.ContentType, "application/json")
+                    setBody(gson.toJson(exampleEarlyReg.copy(slug = exampleBedpres1.slug)))
+                }
+
+            getEarlyRegCall.response.status() shouldBe HttpStatusCode.Forbidden
+            getEarlyRegCall.response.content shouldBe "Cannot submit early registration after registration has opened."
         }
     }
 
@@ -644,7 +675,7 @@ class BedpresRegistrationTest : StringSpec({
         withTestApplication({
             configureRouting(keys)
         }) {
-            val getCountRegCall: TestApplicationCall =
+            val getEarlyRegCall: TestApplicationCall =
                 handleRequest(
                     method = HttpMethod.Post,
                     uri = "/${Routing.registrationRoute}/${Routing.earlyRegistrationRoute}"
@@ -653,10 +684,11 @@ class BedpresRegistrationTest : StringSpec({
                         HttpHeaders.Authorization,
                         "Basic ${Base64.getEncoder().encodeToString("$webkom:${keys[webkom]}breh123".toByteArray())}"
                     )
-                    setBody(gson.toJson(exampleReg))
+                    addHeader(HttpHeaders.ContentType, "application/json")
+                    setBody(gson.toJson(exampleEarlyReg))
                 }
 
-            getCountRegCall.response.status() shouldBe HttpStatusCode.Unauthorized
+            getEarlyRegCall.response.status() shouldBe HttpStatusCode.Unauthorized
         }
     }
 })
