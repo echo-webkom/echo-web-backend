@@ -25,15 +25,15 @@ jobs:
     - name: Build backend with cache
       run: |
         docker build \
-          --cache-from "$USERNAME/$IMAGE_NAME:$TAG" \
-          -t "$USERNAME/$IMAGE_NAME:$TAG" \
-          -t "$USERNAME/$IMAGE_NAME:$COMMIT_SHA" \
+          --cache-from "$ORG_NAME/$IMAGE_NAME:$TAG" \
+          -t "$ORG_NAME/$IMAGE_NAME:$TAG" \
+          -t "$ORG_NAME/$IMAGE_NAME:$COMMIT_SHA" \
           --build-arg BUILDKIT_INLINE_CACHE=1 \
           .
-        docker push "$USERNAME/$IMAGE_NAME" --all-tags
+        docker push "$ORG_NAME/$IMAGE_NAME" --all-tags
       env:
         DOCKER_BUILDKIT: 1
-        USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+        ORG_NAME: echowebkom
         IMAGE_NAME: echo-web-backend
         TAG: "${{ github.base_ref == 'master' && 'latest-prod' || 'latest-dev' }}"
         COMMIT_SHA: ${{ github.sha }}
@@ -41,15 +41,15 @@ jobs:
     - name: Build frontend with cache
       run: |
         docker build \
-          --cache-from "$USERNAME/$IMAGE_NAME:$TAG" \
-          -t "$USERNAME/$IMAGE_NAME:$TAG" \
-          -t "$USERNAME/$IMAGE_NAME:$COMMIT_SHA" \
+          --cache-from "$ORG_NAME/$IMAGE_NAME:$TAG" \
+          -t "$ORG_NAME/$IMAGE_NAME:$TAG" \
+          -t "$ORG_NAME/$IMAGE_NAME:$COMMIT_SHA" \
           --build-arg BUILDKIT_INLINE_CACHE=1 \
           frontend
-        docker push "$USERNAME/$IMAGE_NAME" --all-tags
+        docker push "$ORG_NAME/$IMAGE_NAME" --all-tags
       env:
         DOCKER_BUILDKIT: 1
-        USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+        ORG_NAME: echowebkom
         IMAGE_NAME: echo-web-frontend
         TAG: latest
         COMMIT_SHA: ${{ github.sha }}
@@ -57,7 +57,7 @@ jobs:
     - name: Run Cypress end-to-end tests against frontend
       run: docker-compose -f $COMPOSE_FILE up --exit-code-from=frontend
       env:
-        DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+        ORG_NAME: echowebkom
         TAG: ${{ github.sha }}
         SANITY_TOKEN: ${{ secrets.SANITY_TOKEN }}
         SANITY_DATASET: ${{ secrets.SANITY_DATASET }}
