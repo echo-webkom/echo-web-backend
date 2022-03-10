@@ -5,15 +5,13 @@ host=http://localhost
 port=8080
 user=admin
 
-while getopts zps:e:x:u:h: flag; do
+while getopts z:p:s:e:l: flag; do
   case "${flag}" in
   z) host=${OPTARG} ;;
   p) port=${OPTARG} ;;
   s) slug=${OPTARG} ;;
   e) email=${OPTARG} ;;
-  x) secret=${OPTARG} ;;
-  u) user=${OPTARG} ;;
-  h) happening=${OPTARG} ;;
+  l) link=${OPTARG} ;;
   *) echo "Invalid flag." ;;
   esac
 done
@@ -33,17 +31,12 @@ if [ -z ${email+x} ]; then
   exit 1
 fi
 
-if [ -z ${happening+x} ]; then
-  echo "Happening type not defined (use -h)"
+if [ -z ${link+x} ]; then
+  echo "Link not defined (use -l)"
   exit 1
 fi
 
 curl --verbose \
   -X DELETE \
-  -u "$user":"$secret" \
   -H "Connection: close" \
-  -H "Content-Type: application/json" \
-  -d '{ "slug": "'"${slug}"'", 
-        "email": "'"${email}"'"
-        "type": "'"${happening}"'" }' \
-  "$host":"$port"/registration
+  "$host":"$port"/happening/"$link"/registrations/"$email"

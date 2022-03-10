@@ -56,6 +56,11 @@ fun Application.module() {
         adminKey,
         sendGridApiKey,
         dev,
-        FeatureToggles(sendEmailReg = sendEmailReg, sendEmailHap = sendEmailHap, rateLimit = true, verifyRegs = verifyRegs)
+        FeatureToggles(
+            sendEmailReg = sendEmailReg,
+            sendEmailHap = sendEmailHap,
+            rateLimit = true,
+            verifyRegs = verifyRegs
+        )
     )
 }

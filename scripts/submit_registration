@@ -5,7 +5,7 @@ host=http://localhost
 port=8080
 qa="[]"
 
-while getopts zpe:f:l:d:y:s:t:q:h: flag; do
+while getopts z:p:e:f:l:d:y:s:t:q:h: flag; do
   case "${flag}" in
   z) host=${OPTARG} ;;
   p) port=${OPTARG} ;;
