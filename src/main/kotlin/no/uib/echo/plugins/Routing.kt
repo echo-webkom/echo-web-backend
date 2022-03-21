@@ -18,6 +18,7 @@ import io.ktor.request.receive
 import io.ktor.response.header
 import io.ktor.response.respond
 import io.ktor.response.respondBytes
+import io.ktor.response.respondText
 import io.ktor.routing.Route
 import io.ktor.routing.delete
 import io.ktor.routing.get
@@ -37,6 +38,7 @@ import no.uib.echo.plugins.Routing.getRegistrations
 import no.uib.echo.plugins.Routing.getStatus
 import no.uib.echo.plugins.Routing.postRegistration
 import no.uib.echo.plugins.Routing.putHappening
+import no.uib.echo.plugins.Routing.workshopHelloWorld
 import no.uib.echo.resToJson
 import no.uib.echo.schema.Answer
 import no.uib.echo.schema.AnswerJson
@@ -113,6 +115,8 @@ fun Application.configureRouting(
             getRegistrations(dev)
             postRegistration(sendGridApiKey, featureToggles.sendEmailReg, featureToggles.verifyRegs)
             deleteRegistration(dev)
+
+            workshopHelloWorld()
         }
     }
 }
@@ -120,6 +124,12 @@ fun Application.configureRouting(
 object Routing {
     const val registrationRoute: String = "registration"
     const val happeningRoute: String = "happening"
+
+    fun Route.workshopHelloWorld() {
+        get("/") {
+            call.respondText("Hello World!")
+        }
+    }
 
     fun Route.getStatus() {
         get("/status") {

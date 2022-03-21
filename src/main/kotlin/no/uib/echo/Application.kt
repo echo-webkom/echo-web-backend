@@ -7,6 +7,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.server.netty.EngineMain
 import no.uib.echo.plugins.configureRouting
+import no.uib.echo.plugins.workshopRouting
 import java.net.URI
 import kotlin.Exception
 
@@ -19,6 +20,16 @@ data class FeatureToggles(
 
 fun main(args: Array<String>) {
     EngineMain.main(args)
+}
+
+fun Application.workshop() {
+    val dev = environment.config.propertyOrNull("ktor.dev") != null
+    val databaseUrl = URI(environment.config.property("ktor.databaseUrl").getString())
+    val mbMaxPoolSize = environment.config.propertyOrNull("ktor.maxPoolSize")?.getString()
+
+    DatabaseHandler(dev, databaseUrl, mbMaxPoolSize).init()
+
+    workshopRouting()
 }
 
 fun Application.module() {

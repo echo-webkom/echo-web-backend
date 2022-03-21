@@ -59,7 +59,7 @@ class DatabaseHandler(private val dev: Boolean, dbUrl: URI, mbMaxPoolSize: Strin
                         Happening,
                         Registration,
                         Answer,
-                        SpotRange
+                        SpotRange,
                     )
                 }
             } catch (e: Exception) {
