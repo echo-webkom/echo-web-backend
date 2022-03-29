@@ -6,8 +6,6 @@ build/
 
 .gitignore
 *.iml
-Dockerfile
-docker-compose*
 test
 LICENSE
 README.md

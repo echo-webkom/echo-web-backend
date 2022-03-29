@@ -1,0 +1,7 @@
+FROM docker:dind
+
+WORKDIR /opt/build
+
+COPY . /opt/build/
+
+CMD docker compose up --build
