@@ -146,21 +146,21 @@ fun Application.configureRouting(
 }
 
 object Routing {
-    private const val getStatusRoute = "/status"
+    const val getStatusRoute = "/status"
 
-    private const val putHappeningRoute = "/happening/{slug}"
-    private const val getHappeningInfoRoute = "/happening/{slug}"
-    private const val deleteHappeningRoute = "/happening/{slug}"
+    const val putHappeningRoute = "/happening/{slug}"
+    const val getHappeningInfoRoute = "/happening/{slug}"
+    const val deleteHappeningRoute = "/happening/{slug}"
 
-    private const val getRegistrationsRoute = "/happening/{link}/registrations"
-    private const val postRegistrationRoute = "/happening/{slug}/registrations"
+    const val getRegistrationsRoute = "/happening/{link}/registrations"
+    const val postRegistrationRoute = "/happening/{slug}/registrations"
 
-    private const val postRegistrationCountRoute = "/happening/count/registrations"
+    const val postRegistrationCountRoute = "/happening/count/registrations"
 
-    private const val getUserRoute = "/user/{email}"
-    private const val putUserRoute = "/user/{email}"
+    const val getUserRoute = "/user/{email}"
+    const val putUserRoute = "/user/{email}"
 
-    private const val deleteRegistrationRoute = "/happening/{link}/registrations/{email}"
+    const val deleteRegistrationRoute = "/happening/{link}/registrations/{email}"
 
     fun Route.getStatus() {
         get(getStatusRoute) {
